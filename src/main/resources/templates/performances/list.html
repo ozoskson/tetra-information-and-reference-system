@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Спектакли</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/home">
+                <i class="bi bi-theater"></i> Театральная система
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    <i class="bi bi-person-circle"></i> 
+                    <span sec:authentication="name"></span>
+                </span>
+                <form th:action="@{/logout}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-outline-light btn-sm">Выход</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-calendar-event"></i> Спектакли</h2>
+            <div sec:authorize="hasAnyRole('DIRECTOR', 'ADMIN')">
+                <a href="/performances/new" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Добавить спектакль
+                </a>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="get" action="/performances" class="row g-3">
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" name="search" 
+                               placeholder="Поиск по названию или описанию..." 
+                               th:value="${search}">
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-select" name="sort">
+                            <option value="">Сортировка...</option>
+                            <option value="dateAsc" th:selected="${sort == 'dateAsc'}">По дате (возрастание)</option>
+                            <option value="dateDesc" th:selected="${sort == 'dateDesc'}">По дате (убывание)</option>
+                            <option value="titleAsc" th:selected="${sort == 'titleAsc'}">По названию (А-Я)</option>
+                            <option value="priceAsc" th:selected="${sort == 'priceAsc'}">По цене (возрастание)</option>
+                            <option value="priceDesc" th:selected="${sort == 'priceDesc'}">По цене (убывание)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Поиск</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="row">
+            <div th:each="performance : ${performances}" class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title" th:text="${performance.title}"></h5>
+                        <p class="card-text" th:text="${performance.description}"></p>
+                        <p class="text-muted">
+                            <i class="bi bi-calendar"></i> 
+                            <span th:text="${#temporals.format(performance.dateTime, 'dd.MM.yyyy HH:mm')}"></span>
+                        </p>
+                        <p class="text-muted">
+                            <i class="bi bi-clock"></i> Длительность: 
+                            <span th:text="${performance.duration}"></span> мин.
+                        </p>
+                        <p class="text-muted">
+                            <i class="bi bi-building"></i> Зал: 
+                            <span th:text="${performance.hall.name}"></span>
+                        </p>
+                        <p class="text-primary fw-bold">
+                            <i class="bi bi-currency-exchange"></i> 
+                            <span th:text="${#numbers.formatDecimal(performance.price, 0, 2)}"></span> руб.
+                        </p>
+                        <p class="text-muted" th:if="${performance.actors != null && !performance.actors.isEmpty()}">
+                            <i class="bi bi-people"></i> Актеры: 
+                            <span th:each="actor, iterStat : ${performance.actors}">
+                                <span th:text="${actor.firstName + ' ' + actor.lastName}"></span>
+                                <span th:if="${!iterStat.last}">, </span>
+                            </span>
+                        </p>
+                        <div sec:authorize="hasAnyRole('VIEWER', 'CASHIER', 'DIRECTOR', 'ADMIN')">
+                            <a th:href="@{/tickets/purchase/{id}(id=${performance.id})}" 
+                               class="btn btn-success btn-sm">
+                                <i class="bi bi-ticket"></i> Купить билет
+                            </a>
+                        </div>
+                        <div sec:authorize="hasAnyRole('DIRECTOR', 'ADMIN')" class="mt-2">
+                            <a th:href="@{/performances/{id}/edit(id=${performance.id})}" 
+                               class="btn btn-warning btn-sm">
+                                <i class="bi bi-pencil"></i> Редактировать
+                            </a>
+                            <form th:action="@{/performances/{id}/delete(id=${performance.id})}" 
+                                  method="post" class="d-inline">
+                                <button type="submit" class="btn btn-danger btn-sm" 
+                                        onclick="return confirm('Удалить спектакль?')">
+                                    <i class="bi bi-trash"></i> Удалить
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+

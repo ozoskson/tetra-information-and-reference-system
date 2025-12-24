@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Залы</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body style="background-color: #f8f9fa;">
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/home">
+                <i class="bi bi-theater"></i> Театральная система
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    <i class="bi bi-person-circle"></i> 
+                    <span sec:authentication="name"></span>
+                </span>
+                <form th:action="@{/logout}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-outline-light btn-sm">Выход</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-building"></i> Залы</h2>
+            <div sec:authorize="hasAnyRole('CASHIER', 'DIRECTOR', 'ADMIN')">
+                <a href="/halls/new" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Добавить зал
+                </a>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="get" action="/halls" class="row g-3">
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" name="search" 
+                               placeholder="Поиск по названию..." 
+                               th:value="${search}">
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-select" name="sort">
+                            <option value="">Сортировка...</option>
+                            <option value="nameAsc" th:selected="${sort == 'nameAsc'}">По названию (А-Я)</option>
+                            <option value="capacityAsc" th:selected="${sort == 'capacityAsc'}">По вместимости (возрастание)</option>
+                            <option value="capacityDesc" th:selected="${sort == 'capacityDesc'}">По вместимости (убывание)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Поиск</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="row">
+            <div th:each="hall : ${halls}" class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title" th:text="${hall.name}"></h5>
+                        <p class="text-muted">
+                            <i class="bi bi-people"></i> Вместимость: 
+                            <span th:text="${hall.capacity}"></span> мест
+                        </p>
+                        <p class="card-text" th:text="${hall.description}"></p>
+                        <div sec:authorize="hasAnyRole('CASHIER', 'DIRECTOR', 'ADMIN')">
+                            <a th:href="@{/halls/{id}/edit(id=${hall.id})}" 
+                               class="btn btn-warning btn-sm">
+                                <i class="bi bi-pencil"></i> Редактировать
+                            </a>
+                            <form th:action="@{/halls/{id}/delete(id=${hall.id})}" 
+                                  method="post" class="d-inline">
+                                <button type="submit" class="btn btn-danger btn-sm" 
+                                        onclick="return confirm('Удалить зал?')">
+                                    <i class="bi bi-trash"></i> Удалить
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
